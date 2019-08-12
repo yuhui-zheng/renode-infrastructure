@@ -92,7 +92,7 @@ namespace Antmicro.Renode.Utilities
                     stream.Write(initBytes, 0, initBytes.Length);
                 }
 
-                while(true)
+                while(!queueCancellationToken.IsCancellationRequested)
                 {
                     stream.WriteByte(queue.Take(queueCancellationToken.Token));
                 }
@@ -131,6 +131,7 @@ namespace Antmicro.Renode.Utilities
                 if(value == -1)
                 {
                     Logger.LogAs(this, LogLevel.Debug, "Client disconnected, stream closed.");
+                    queueCancellationToken.Cancel();
                     break;
                 }
             }
@@ -183,6 +184,8 @@ namespace Antmicro.Renode.Utilities
                 writerThread = null;
                 readerThread = null;
 
+                queueCancellationToken = new CancellationTokenSource();
+
                 var connectionClosed = ConnectionClosed;
                 if(connectionClosed != null)
                 {
@@ -191,9 +194,9 @@ namespace Antmicro.Renode.Utilities
             }
         }
 
-        private readonly CancellationTokenSource queueCancellationToken;
         private readonly BlockingCollection<byte> queue;
 
+        private CancellationTokenSource queueCancellationToken;
         private bool listenerThreadStopped;
         private bool emitConfigBytes;
         private Thread listenerThread;
