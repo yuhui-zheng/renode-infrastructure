@@ -93,6 +93,24 @@ namespace Antmicro.Renode.Core.USB
             }
         }
 
+        public byte[] Read(int size)
+        {
+            var result = Enumerable.Empty<byte>();
+
+            while(result.Count() < size)
+            {
+                var mre = new System.Threading.ManualResetEvent(false);
+                SetDataReadCallbackOneShot((e, bytes) =>
+                {
+                    result = result.Concat(bytes.ToArray());
+                    mre.Set();
+                });
+                mre.WaitOne();
+            }
+
+            return result.ToArray();
+        }
+
         public byte Identifier { get; }
         public Direction Direction { get; }
         public EndpointTransferType TransferType { get; }
