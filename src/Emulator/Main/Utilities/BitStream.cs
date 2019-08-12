@@ -35,6 +35,15 @@ namespace Antmicro.Renode.Utilities
             return this;
         }
 
+        public BitStream Append(ushort s)
+        {
+            EnsureIsAligned();
+            segments.Add((byte)s);
+            segments.Add((byte)(s >> 8));
+            Length += 16;
+            return this;
+        }
+
         private void EnsureIsAligned()
         {
             var offset = (int)(Length % BitsPerSegment);
