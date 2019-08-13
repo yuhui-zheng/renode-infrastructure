@@ -15,6 +15,7 @@ using Antmicro.Renode.Core.USB;
 using Antmicro.Renode.Core.USB.MSC;
 using Antmicro.Renode.Core.USB.MSC.BOT;
 using Antmicro.Renode.Exceptions;
+using Antmicro.Renode.Extensions;
 using Antmicro.Renode.Logging;
 using Antmicro.Renode.Storage;
 using Antmicro.Renode.Storage.SCSI;
@@ -31,6 +32,18 @@ namespace Antmicro.Renode.Peripherals.USB
             var pendrive = new USBPendrive(file, persistent: persistent);
             attachTo.Register(pendrive, new NumberRegistrationPoint<int>(port));
             machine.SetLocalName(pendrive, name);
+        }
+
+        public static void PendriveFromFile(this HostMachine host, string file, int port, bool persistent = true)
+        {
+            var usbController = host.TryGetByName("usb", out var success) as USBIPServer;
+            if(!success || usbController == null)
+            {
+                throw new RecoverableException("No USB controller found in the host. Did you forget to call 'emulation CreateUSBIPServer'?");
+            }
+
+            var pendrive = new USBPendrive(file, persistent: persistent);
+            usbController.Register(pendrive, new NumberRegistrationPoint<int>(port));
         }
     }
 
