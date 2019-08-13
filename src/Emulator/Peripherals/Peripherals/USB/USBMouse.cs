@@ -5,6 +5,7 @@
 // Full license text is available in 'licenses/MIT.txt'.
 //
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using Antmicro.Renode.Logging;
 using Antmicro.Renode.Peripherals.Input;
@@ -12,9 +13,44 @@ using Antmicro.Renode.Utilities;
 using Antmicro.Renode.Core;
 using Antmicro.Renode.Core.USB;
 using Antmicro.Renode.Core.USB.HID;
+using Antmicro.Renode.Extensions;
+using Antmicro.Renode.Exceptions;
+using Antmicro.Renode.Core.Structure;
 
 namespace Antmicro.Renode.Peripherals.USB
 {
+    public static class USBMouseExtensions
+    {
+        public static void AttachUSBMouse(this HostMachine host, int port)
+        {
+            var usbController = host.TryGetByName("usb", out var success) as USBIPServer;
+            if(!success || usbController == null)
+            {
+                throw new RecoverableException("No USB controller found in the host. Did you forget to call 'emulation CreateUSBIPServer'?");
+            }
+
+            var mouse = new USBMouse();
+            usbController.Register(mouse, new NumberRegistrationPoint<int>(port));
+        }
+
+        public static void MoveMouse(this HostMachine host, int x, int y)
+        {
+            var usbController = host.TryGetByName("usb", out var success) as USBIPServer;
+            if(!success || usbController == null)
+            {
+                throw new RecoverableException("No USB controller found in the host. Did you forget to call 'emulation CreateUSBIPServer'?");
+            }
+
+            var mouse = usbController.Children.Where(m => m.Peripheral.GetType() == typeof(USBMouse)).Select(m => m.Peripheral).Cast<USBMouse>().FirstOrDefault();
+            if(mouse == null)
+            {
+                throw new RecoverableException("No USB mouse attached to the host. Did you forget to call 'host AttachUSBMouse'?");
+            }
+
+            mouse.MoveBy(x, y);
+        }
+    }
+
     public class USBMouse : IUSBDevice, IRelativePositionPointerInput
     {
         public USBMouse()
