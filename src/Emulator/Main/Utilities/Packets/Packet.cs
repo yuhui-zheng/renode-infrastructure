@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Antmicro.Renode.Utilities.Collections;
 
 namespace Antmicro.Renode.Utilities.Packets
 {
@@ -18,7 +19,7 @@ namespace Antmicro.Renode.Utilities.Packets
             // we need to do the casting as otherwise setting value would not work on structs
             var result = (object)default(T);
 
-            var fieldsAndProperties = GetFieldsAndProperties<T>();
+            var fieldsAndProperties = cache.Get(typeof(T), x => GetFieldsAndProperties<T>());
 
             var offset = dataOffset;
             foreach(var field in fieldsAndProperties)
@@ -91,7 +92,7 @@ namespace Antmicro.Renode.Utilities.Packets
 
             var result = new DynamicPropertiesObject();
 
-            var fieldsAndProperties = GetFieldsAndProperties<T>();
+            var fieldsAndProperties = cache.Get(typeof(T), x => GetFieldsAndProperties<T>());
 
             var offset = dataOffset;
             foreach(var field in fieldsAndProperties)
@@ -126,7 +127,7 @@ namespace Antmicro.Renode.Utilities.Packets
 
         public static byte[] Encode<T>(T packet)
         {
-            var fieldsAndProperties = GetFieldsAndProperties<T>();
+            var fieldsAndProperties = cache.Get(typeof(T), x => GetFieldsAndProperties<T>());
 
             var maxOffset = 0;
             var offset = 0;
@@ -196,6 +197,8 @@ namespace Antmicro.Renode.Utilities.Packets
                     .Select(x => new FieldPropertyInfoWrapper(x))
                 ).OrderBy(x => x.Order).ToArray();
         }
+
+        private static readonly SimpleCache cache = new SimpleCache();
 
         private class FieldPropertyInfoWrapper
         {
