@@ -169,7 +169,7 @@ namespace Antmicro.Renode.Peripherals.UART
                 .WithTag("RTO", 0, 24)
                 .WithTag("BLEN", 24, 8)
             ;
-            Register.ReceiverTimeout.Define(this, 0x00000000, name: "USART_RQR")
+            Register.Request.Define(this, 0x00000000, name: "USART_RQR")
                 .WithTaggedFlag("ABRRQ", 0)
                 .WithTaggedFlag("SBKRQ", 1)
                 .WithTaggedFlag("MMRQ", 2)
@@ -191,7 +191,7 @@ namespace Antmicro.Renode.Peripherals.UART
                 .WithTaggedFlag("CTS", 10)
                 .WithTaggedFlag("RTOF", 11)
                 .WithTaggedFlag("EOBF", 12)
-                .WithReservedBits(23, 1)
+                .WithReservedBits(13, 1)
                 .WithTaggedFlag("ABRE", 14)
                 .WithTaggedFlag("ABRF", 15)
                 .WithTaggedFlag("BUSY", 16)
@@ -240,7 +240,7 @@ namespace Antmicro.Renode.Peripherals.UART
                     }, name: "RDR")
                 .WithReservedBits(9, 23)
                ;
-            Register.ReceiveData.Define(this, name: "USART_TDR")
+            Register.TransmitData.Define(this, name: "USART_TDR")
                 .WithValueField(0, 9, FieldMode.Read | FieldMode.Write, writeCallback: (_, value) =>
                     {
                         if (!usartEnabled.Value && !transmitterEnabled.Value)
